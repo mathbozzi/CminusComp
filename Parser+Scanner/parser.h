@@ -73,8 +73,8 @@ extern int yydebug;
     GE = 279,
     EQ = 280,
     NEQ = 281,
-    NUM = 282,
-    ID = 283,
+    ID = 282,
+    NUM = 283,
     STRING = 284,
     PLUS = 285,
     MINUS = 286,
@@ -87,11 +87,12 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 37 "parser.y"
+#line 43 "parser.y"
 
     char *str;
+    int number;
 
-#line 95 "parser.h"
+#line 96 "parser.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

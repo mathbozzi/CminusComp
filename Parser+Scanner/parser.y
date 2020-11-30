@@ -15,16 +15,24 @@ int yylex_destroy(void);
 void yyerror(const char *s);
 
 void check_var(char* name);
-void new_var(char* name);
+void new_var(char* name, int size);
+
+void check_func(char* name);
+void new_func(char* name);
 
 extern char *yytext;
 extern int yylineno;
 
 StrTable *st;
 VarTable *vt;
+FuncTable *ft;
 
 Type last_decl_type;
-int scope = 0;
+
+int scope = 0; /* contador de escopo para adição de variáveis na vt. */
+int arity = 0; /* contador de aridade para adição de funções na ft. É resetado quando uma função é adicionada. */
+int arguments = 0; /* contador de argumentos passados para uma função. É usado para checar se bate com a aridade. Também resetado após cada chamada de função. */
+
 %}
 
 %token ELSE IF INPUT INT OUTPUT RETURN VOID WHILE WRITE
@@ -32,13 +40,13 @@ int scope = 0;
 %token ASSIGN
 %token LT LE GT GE EQ NEQ
 
-%token NUM
-
 %union {
     char *str;
+    int number;
 }
 
 %token <str> ID
+%token <number> NUM
 
 %token STRING
 
@@ -63,7 +71,7 @@ func_decl:
 ;
 
 func_header:
-  ret_type ID { new_var($2); } LPAREN params RPAREN
+  ret_type ID LPAREN params RPAREN { new_func($2); }
 ;
 
 func_body:
@@ -96,8 +104,8 @@ param_list:
 ;
 
 param:
-  INT ID { new_var($2); }
-| INT ID { new_var($2); } LBRACK RBRACK
+  INT ID { new_var($2, 0); arity++; }
+| INT ID LBRACK RBRACK { new_var($2, -1); arity++; }
 ;
 
 var_decl_list:
@@ -106,8 +114,8 @@ var_decl_list:
 ;
 
 var_decl:
-  INT ID { new_var($2); } SEMI
-| INT ID { new_var($2); } LBRACK NUM RBRACK SEMI
+  INT ID { new_var($2, 0); } SEMI
+| INT ID LBRACK NUM RBRACK { new_var($2, $4); } SEMI
 ;
 
 stmt_list:
@@ -170,7 +178,7 @@ write_call:
 ;
 
 user_func_call:
-  ID { check_var($1); } LPAREN opt_arg_list RPAREN
+  ID LPAREN opt_arg_list RPAREN { check_func($1); arguments = 0; }
 ;
 
 opt_arg_list:
@@ -179,8 +187,8 @@ opt_arg_list:
 ;
 
 arg_list:
-  arg_list COMMA arith_expr
-| arith_expr
+  arg_list COMMA arith_expr { arguments++; }
+| arith_expr                { arguments++; }
 ;
 
 bool_expr:
@@ -216,7 +224,7 @@ void check_var(char* name) {
     }
 }
 
-void new_var(char* name) {
+void new_var(char* name, int size) {
     int var_scope = -1;
     int idx = lookup_var(vt, name, &var_scope);
     if (idx != -1 && var_scope == scope) {
@@ -224,8 +232,33 @@ void new_var(char* name) {
                 yylineno, name, get_line(vt, idx));
         exit(EXIT_FAILURE);
     }
-    printf("Line %d, adding var %s to table.\n",  yylineno, name);
-    add_var(vt, name, yylineno, last_decl_type, scope);
+    add_var(vt, name, yylineno, scope, size);
+}
+
+void check_func(char* name) {
+  int idx = lookup_func(ft, name);
+  if (idx == -1) {
+    printf("SEMANTIC ERROR (%d): function '%s' was not declared.\n", yylineno, name);
+    exit(EXIT_FAILURE);
+  }
+  else{
+    int expected_arity = get_func_arity(ft, idx);
+    if(arguments != expected_arity){
+        printf("SEMANTIC ERROR (%d): function '%s' was called with %d arguments but declared with %d parameters.\n", yylineno, name, arguments, expected_arity);
+        exit(EXIT_FAILURE);
+      }
+    }
+}
+
+void new_func(char* name) {
+    int idx = lookup_func(ft, name);
+    if (idx != -1) {
+        printf("SEMANTIC ERROR (%d): function '%s' already declared at line %d.\n",
+                yylineno, name, get_func_line(ft, idx));
+        exit(EXIT_FAILURE);
+    }
+    add_func(ft, name, yylineno, arity);
+    arity = 0;
 }
 
 // Error handling.
@@ -238,6 +271,7 @@ void yyerror (char const *s) {
 int main() {
     st = create_str_table();
     vt = create_var_table();
+    ft = create_func_table();
 
     yyparse();
     printf("PARSE SUCCESSFUL!\n");
@@ -245,9 +279,12 @@ int main() {
     printf("\n\n");
     print_str_table(st); printf("\n\n");
     print_var_table(vt); printf("\n\n");
+    print_func_table(ft); printf("\n\n");
+    
 
     free_str_table(st);
     free_var_table(vt);
+    free_func_table(ft);
     yylex_destroy();    // To avoid memory leaks within flex...
 
     return 0;

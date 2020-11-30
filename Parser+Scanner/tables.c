@@ -57,8 +57,8 @@ void free_str_table(StrTable* st) {
 typedef struct {
   char name[VARIABLE_MAX_SIZE];
   int line;
-  Type type;
   int scope;
+  int size;
 } Entry;
 
 struct var_table {
@@ -82,11 +82,11 @@ int lookup_var(VarTable* vt, char* s, int* scope) {
     return -1;
 }
 
-int add_var(VarTable* vt, char* s, int line, Type type, int scope) {
+int add_var(VarTable* vt, char* s, int line, int scope, int size) {
     strcpy(vt->t[vt->size].name, s);
     vt->t[vt->size].line = line;
-    vt->t[vt->size].type = type;
     vt->t[vt->size].scope = scope;
+    vt->t[vt->size].size = size;
     int idx_added = vt->size;
     vt->size++;
     return idx_added;
@@ -100,8 +100,8 @@ int get_line(VarTable* vt, int i) {
     return vt->t[i].line;
 }
 
-Type get_type(VarTable* vt, int i) {
-    return vt->t[i].type;
+int get_size(VarTable* vt, int i) {
+    return vt->t[i].size;
 }
 
 int get_scope(VarTable* vt, int i){
@@ -111,12 +111,73 @@ int get_scope(VarTable* vt, int i){
 void print_var_table(VarTable* vt) {
     printf("Variables table:\n");
     for (int i = 0; i < vt->size; i++) {
-         printf("Entry %d -- name: %s, line: %d, type: %s, scope: %d\n", i,
-                get_name(vt, i), get_line(vt, i), get_text(get_type(vt, i)), get_scope(vt, i));
+         printf("Entry %d -- name: %s, line: %d, scope: %d, size: %d\n", i,
+                get_name(vt, i), get_line(vt, i), get_scope(vt, i), get_size(vt, i));
     }
 }
 
-
 void free_var_table(VarTable* vt) {
     free(vt);
+}
+
+// Functions Table
+// ----------------------------------------------------------------------------
+
+typedef struct {
+  char name[VARIABLE_MAX_SIZE];
+  int line;
+  int arity; /* o número de parâmetros da função. */
+} FuncEntry;
+
+struct func_table {
+    FuncEntry t[VARIABLES_TABLE_MAX_SIZE];
+    int size;
+};
+
+FuncTable* create_func_table(){
+    FuncTable *ft = malloc(sizeof * ft);
+    ft->size = 0;
+    return ft;    
+}
+
+int add_func(FuncTable* ft, char* s, int line, int arity){
+    strcpy(ft->t[ft->size].name, s);
+    ft->t[ft->size].line = line;
+    ft->t[ft->size].arity = arity;
+    int idx_added = ft->size;
+    ft->size++;
+    return idx_added;
+}
+
+int lookup_func(FuncTable* ft, char* s){
+    for (int i = 0; i < ft->size; i++) {
+        if (strcmp(ft->t[i].name, s) == 0)  {
+            return i;
+        }
+    }
+    return -1;
+}
+
+char* get_func_name(FuncTable* ft, int i){
+    return ft->t[i].name;
+}
+
+int get_func_line(FuncTable* ft, int i){
+    return ft->t[i].line;
+}
+
+int get_func_arity(FuncTable* ft, int i){
+    return ft->t[i].arity;
+}
+
+void print_func_table(FuncTable* ft){
+    printf("Functions table:\n");
+    for (int i = 0; i < ft->size; i++) {
+         printf("Entry %d -- name: %s, line: %d, arity: %d\n", i,
+                get_func_name(ft, i), get_func_line(ft, i), get_func_arity(ft, i));
+    }
+}
+
+void free_func_table(FuncTable* ft){
+    free(ft);
 }

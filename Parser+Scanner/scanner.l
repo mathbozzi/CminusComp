@@ -7,9 +7,11 @@
 
 %{
 #include <stdio.h>
+#include <string.h>
 #include "types.h"
 #include "tables.h"
 #include "parser.h"
+
 
 void yyerror(const char *s);
 
@@ -69,7 +71,7 @@ SLC         "//"[^\n]*\n
 "{"             { process_token(LBRACE); }
 "}"             { process_token(RBRACE); }
 
-{number}        { process_token(NUM); }
+{number}        { yylval.number = atoi(yytext); process_token(NUM); }
 {identifier}    { yylval.str = strdup(yytext); process_token(ID); }
 {string}        { add_string(st, yytext); process_token(STRING); }
 
