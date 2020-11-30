@@ -14,7 +14,7 @@ int yylex();
 int yylex_destroy(void);
 void yyerror(const char *s);
 
-void check_var();
+void check_var(char* name);
 void new_var(char* name);
 
 extern char *yytext;
@@ -95,8 +95,8 @@ param_list:
 ;
 
 param:
-  INT ID
-| INT ID LBRACK RBRACK
+  INT ID { new_var($2); }
+| INT ID { new_var($2); } LBRACK RBRACK
 ;
 
 var_decl_list:
@@ -127,9 +127,9 @@ assign_stmt:
 ;
 
 lval:
-  ID { check_var(); }
+  ID { check_var($1); }
 | ID LBRACK NUM RBRACK
-| ID LBRACK ID { check_var(); } RBRACK
+| ID LBRACK ID { check_var($3); } RBRACK
 ;
 
 if_stmt:
@@ -169,7 +169,7 @@ write_call:
 ;
 
 user_func_call:
-  ID { check_var(); } LPAREN opt_arg_list RPAREN
+  ID { check_var($1); } LPAREN opt_arg_list RPAREN
 ;
 
 opt_arg_list:
@@ -205,11 +205,11 @@ arith_expr:
 
 %%
 
-void check_var() {
-    int idx = lookup_var(vt, yytext);
+void check_var(char* name) {
+    int idx = lookup_var(vt, name);
     if (idx == -1) {
         printf("SEMANTIC ERROR (%d): variable '%s' was not declared.\n",
-                yylineno, yytext);
+                yylineno, name);
         exit(EXIT_FAILURE);
     }
 }
