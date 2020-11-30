@@ -1,4 +1,3 @@
-
 %output "parser.c"
 %defines "parser.h"
 %define parse.error verbose
@@ -6,12 +5,25 @@
 
 %{
 #include <stdio.h>
+#include <stdlib.h>
+#include "types.h"
+#include "tables.h"
 #include "parser.h"
 
 int yylex();
+int yylex_destroy(void);
 void yyerror(const char *s);
 
+void check_var();
+void new_var(char* name);
+
+extern char *yytext;
 extern int yylineno;
+
+StrTable *st;
+VarTable *vt;
+
+Type last_decl_type;
 %}
 
 %token ELSE IF INPUT INT OUTPUT RETURN VOID WHILE WRITE
@@ -20,7 +32,13 @@ extern int yylineno;
 %token LT LE GT GE EQ NEQ
 
 %token NUM
-%token ID
+
+%union {
+    char *str;
+}
+
+%token <str> ID
+
 %token STRING
 
 %left PLUS MINUS
@@ -44,7 +62,7 @@ func_decl:
 ;
 
 func_header:
-  ret_type ID LPAREN params RPAREN
+  ret_type ID { new_var($2); } LPAREN params RPAREN
 ;
 
 func_body:
@@ -87,8 +105,8 @@ var_decl_list:
 ;
 
 var_decl:
-  INT ID SEMI
-| INT ID LBRACK NUM RBRACK SEMI
+  INT ID { new_var($2); } SEMI
+| INT ID { new_var($2); } LBRACK NUM RBRACK SEMI
 ;
 
 stmt_list:
@@ -109,9 +127,9 @@ assign_stmt:
 ;
 
 lval:
-  ID
+  ID { check_var(); }
 | ID LBRACK NUM RBRACK
-| ID LBRACK ID RBRACK
+| ID LBRACK ID { check_var(); } RBRACK
 ;
 
 if_stmt:
@@ -151,7 +169,7 @@ write_call:
 ;
 
 user_func_call:
-  ID LPAREN opt_arg_list RPAREN
+  ID { check_var(); } LPAREN opt_arg_list RPAREN
 ;
 
 opt_arg_list:
@@ -187,15 +205,47 @@ arith_expr:
 
 %%
 
+void check_var() {
+    int idx = lookup_var(vt, yytext);
+    if (idx == -1) {
+        printf("SEMANTIC ERROR (%d): variable '%s' was not declared.\n",
+                yylineno, yytext);
+        exit(EXIT_FAILURE);
+    }
+}
+
+void new_var(char* name) {
+    int idx = lookup_var(vt, name);
+    if (idx != -1) {
+        printf("SEMANTIC ERROR (%d): variable '%s' already declared at line %d.\n",
+                yylineno, name, get_line(vt, idx));
+        exit(EXIT_FAILURE);
+    }
+    printf("Line %d, adding var %s to table.\n",  yylineno, name);
+    add_var(vt, name, yylineno, last_decl_type);
+}
+
 // Error handling.
 void yyerror (char const *s) {
     printf("PARSE ERROR (%d): %s\n", yylineno, s);
+    exit(EXIT_FAILURE);
 }
 
 // Main.
 int main() {
-    if (!yyparse()) {
-        printf("PARSE SUCCESSFUL!\n");
-    }
+    st = create_str_table();
+    vt = create_var_table();
+
+    yyparse();
+    printf("PARSE SUCCESSFUL!\n");
+
+    printf("\n\n");
+    print_str_table(st); printf("\n\n");
+    print_var_table(vt); printf("\n\n");
+
+    free_str_table(st);
+    free_var_table(vt);
+    yylex_destroy();    // To avoid memory leaks within flex...
+
     return 0;
 }

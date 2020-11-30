@@ -7,11 +7,14 @@
 
 %{
 #include <stdio.h>
+#include "types.h"
+#include "tables.h"
 #include "parser.h"
 
 void yyerror(const char *s);
 
 #define process_token(type) return type
+extern StrTable *st;
 %}
 
 number      [0-9]+
@@ -67,8 +70,8 @@ SLC         "//"[^\n]*\n
 "}"             { process_token(RBRACE); }
 
 {number}        { process_token(NUM); }
-{identifier}    { process_token(ID); }
-{string}        { process_token(STRING); }
+{identifier}    { yylval.str = strdup(yytext); process_token(ID); }
+{string}        { add_string(st, yytext); process_token(STRING); }
 
                 /* Be sure to keep this as the last rule */
 .               { printf("SCANNING ERROR (%d): Unknown symbol %s\n", yylineno, yytext);
