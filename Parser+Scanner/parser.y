@@ -24,6 +24,7 @@ StrTable *st;
 VarTable *vt;
 
 Type last_decl_type;
+int scope = 0;
 %}
 
 %token ELSE IF INPUT INT OUTPUT RETURN VOID WHILE WRITE
@@ -54,7 +55,7 @@ program:
 
 func_decl_list:
   func_decl_list func_decl
-| func_decl
+| func_decl { scope++; }
 ;
 
 func_decl:
@@ -206,7 +207,8 @@ arith_expr:
 %%
 
 void check_var(char* name) {
-    int idx = lookup_var(vt, name);
+    int var_scope = -1;
+    int idx = lookup_var(vt, name, &var_scope);
     if (idx == -1) {
         printf("SEMANTIC ERROR (%d): variable '%s' was not declared.\n",
                 yylineno, name);
@@ -215,14 +217,15 @@ void check_var(char* name) {
 }
 
 void new_var(char* name) {
-    int idx = lookup_var(vt, name);
-    if (idx != -1) {
+    int var_scope = -1;
+    int idx = lookup_var(vt, name, &var_scope);
+    if (idx != -1 && var_scope == scope) {
         printf("SEMANTIC ERROR (%d): variable '%s' already declared at line %d.\n",
                 yylineno, name, get_line(vt, idx));
         exit(EXIT_FAILURE);
     }
     printf("Line %d, adding var %s to table.\n",  yylineno, name);
-    add_var(vt, name, yylineno, last_decl_type);
+    add_var(vt, name, yylineno, last_decl_type, scope);
 }
 
 // Error handling.

@@ -58,6 +58,7 @@ typedef struct {
   char name[VARIABLE_MAX_SIZE];
   int line;
   Type type;
+  int scope;
 } Entry;
 
 struct var_table {
@@ -71,19 +72,21 @@ VarTable* create_var_table() {
     return vt;
 }
 
-int lookup_var(VarTable* vt, char* s) {
+int lookup_var(VarTable* vt, char* s, int* scope) {
     for (int i = 0; i < vt->size; i++) {
         if (strcmp(vt->t[i].name, s) == 0)  {
+            *scope = vt->t[i].scope;
             return i;
         }
     }
     return -1;
 }
 
-int add_var(VarTable* vt, char* s, int line, Type type) {
+int add_var(VarTable* vt, char* s, int line, Type type, int scope) {
     strcpy(vt->t[vt->size].name, s);
     vt->t[vt->size].line = line;
     vt->t[vt->size].type = type;
+    vt->t[vt->size].scope = scope;
     int idx_added = vt->size;
     vt->size++;
     return idx_added;
@@ -101,13 +104,18 @@ Type get_type(VarTable* vt, int i) {
     return vt->t[i].type;
 }
 
+int get_scope(VarTable* vt, int i){
+    return vt->t[i].scope;
+}
+
 void print_var_table(VarTable* vt) {
     printf("Variables table:\n");
     for (int i = 0; i < vt->size; i++) {
-         printf("Entry %d -- name: %s, line: %d, type: %s\n", i,
-                get_name(vt, i), get_line(vt, i), get_text(get_type(vt, i)));
+         printf("Entry %d -- name: %s, line: %d, type: %s, scope: %d\n", i,
+                get_name(vt, i), get_line(vt, i), get_text(get_type(vt, i)), get_scope(vt, i));
     }
 }
+
 
 void free_var_table(VarTable* vt) {
     free(vt);
