@@ -33,6 +33,10 @@ int scope = 0; /* contador de escopo para adição de variáveis na vt. */
 int arity = 0; /* contador de aridade para adição de funções na ft. É resetado quando uma função é adicionada. */
 int arguments = 0; /* contador de argumentos passados para uma função. É usado para checar se bate com a aridade. Também resetado após cada chamada de função. */
 
+char* id;
+int num;
+char* func_id;
+
 %}
 
 %token ELSE IF INPUT INT OUTPUT RETURN VOID WHILE WRITE
@@ -40,13 +44,8 @@ int arguments = 0; /* contador de argumentos passados para uma função. É usad
 %token ASSIGN
 %token LT LE GT GE EQ NEQ
 
-%union {
-    char *str;
-    int number;
-}
-
-%token <str> ID
-%token <number> NUM
+%token ID
+%token NUM
 
 %token STRING
 
@@ -71,7 +70,7 @@ func_decl:
 ;
 
 func_header:
-  ret_type ID LPAREN params RPAREN { new_func($2); }
+  ret_type ID { func_id = id; } LPAREN params RPAREN { new_func(func_id); }
 ;
 
 func_body:
@@ -104,8 +103,8 @@ param_list:
 ;
 
 param:
-  INT ID { new_var($2, 0); arity++; }
-| INT ID LBRACK RBRACK { new_var($2, -1); arity++; }
+  INT ID { new_var(id, 0); arity++; }
+| INT ID LBRACK RBRACK { new_var(id, -1); arity++; }
 ;
 
 var_decl_list:
@@ -114,8 +113,8 @@ var_decl_list:
 ;
 
 var_decl:
-  INT ID { new_var($2, 0); } SEMI
-| INT ID LBRACK NUM RBRACK { new_var($2, $4); } SEMI
+  INT ID { new_var(id, 0); } SEMI
+| INT ID LBRACK NUM RBRACK { new_var(id, num); } SEMI
 ;
 
 stmt_list:
@@ -136,9 +135,9 @@ assign_stmt:
 ;
 
 lval:
-  ID { check_var($1); }
+  ID { check_var(id); }
 | ID LBRACK NUM RBRACK
-| ID LBRACK ID { check_var($3); } RBRACK
+| ID LBRACK ID { check_var(id); } RBRACK
 ;
 
 if_stmt:
@@ -178,7 +177,7 @@ write_call:
 ;
 
 user_func_call:
-  ID LPAREN opt_arg_list RPAREN { check_func($1); arguments = 0; }
+  ID {func_id = id; } LPAREN opt_arg_list RPAREN { check_func(func_id); arguments = 0; }
 ;
 
 opt_arg_list:

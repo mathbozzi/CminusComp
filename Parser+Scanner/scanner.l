@@ -17,6 +17,8 @@ void yyerror(const char *s);
 
 #define process_token(type) return type
 extern StrTable *st;
+extern char* id;
+extern int num;
 %}
 
 number      [0-9]+
@@ -71,8 +73,8 @@ SLC         "//"[^\n]*\n
 "{"             { process_token(LBRACE); }
 "}"             { process_token(RBRACE); }
 
-{number}        { yylval.number = atoi(yytext); process_token(NUM); }
-{identifier}    { yylval.str = strdup(yytext); process_token(ID); }
+{number}        { num = atoi(yytext); process_token(NUM); }
+{identifier}    { id = strdup(yytext); process_token(ID); }
 {string}        { add_string(st, yytext); process_token(STRING); }
 
                 /* Be sure to keep this as the last rule */
