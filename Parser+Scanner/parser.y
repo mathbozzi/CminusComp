@@ -8,17 +8,18 @@
 #include <stdlib.h>
 #include "types.h"
 #include "tables.h"
+#include "ast.h"
 #include "parser.h"
 
 int yylex();
 int yylex_destroy(void);
 void yyerror(const char *s);
 
-void check_var(char* name);
-void new_var(char* name, int size);
+AST* check_var(char* name);
+AST* new_var(char* name, int size);
 
-void check_func(char* name);
-void new_func(char* name);
+AST* check_func(char* name);
+AST* new_func(char* name);
 
 extern char *yytext;
 extern int yylineno;
@@ -37,7 +38,11 @@ char* id;
 int num;
 char* func_id;
 
+AST* root;
+
 %}
+
+%define api.value.type {AST*}
 
 %token ELSE IF INPUT INT OUTPUT RETURN VOID WHILE WRITE
 %token SEMI COMMA LPAREN RPAREN LBRACK RBRACK LBRACE RBRACE
@@ -57,7 +62,7 @@ char* func_id;
 %%
 
 program:
-  func_decl_list
+  func_decl_list { root = new_subtree(FUNC_LIST_NODE, NO_TYPE, 0); }
 ;
 
 func_decl_list:
@@ -213,7 +218,7 @@ arith_expr:
 
 %%
 
-void check_var(char* name) {
+AST* check_var(char* name) {
     int var_scope = -1;
     int idx = lookup_var(vt, name, &var_scope);
     if (idx == -1) {
@@ -221,9 +226,10 @@ void check_var(char* name) {
                 yylineno, name);
         exit(EXIT_FAILURE);
     }
+    return new_node(VAR_USE_NODE, idx, INT_TYPE);
 }
 
-void new_var(char* name, int size) {
+AST* new_var(char* name, int size) {
     int var_scope = -1;
     int idx = lookup_var(vt, name, &var_scope);
     if (idx != -1 && var_scope == scope) {
@@ -231,10 +237,11 @@ void new_var(char* name, int size) {
                 yylineno, name, get_line(vt, idx));
         exit(EXIT_FAILURE);
     }
-    add_var(vt, name, yylineno, scope, size);
+    idx = add_var(vt, name, yylineno, scope, size);
+    return new_node(VAR_DECL_NODE, idx, INT_TYPE);
 }
 
-void check_func(char* name) {
+AST* check_func(char* name) {
   int idx = lookup_func(ft, name);
   if (idx == -1) {
     printf("SEMANTIC ERROR (%d): function '%s' was not declared.\n", yylineno, name);
@@ -247,17 +254,19 @@ void check_func(char* name) {
         exit(EXIT_FAILURE);
       }
     }
+  return new_node(FUNCTION_CALL_NODE, idx, INT_TYPE);
 }
 
-void new_func(char* name) {
+AST* new_func(char* name) {
     int idx = lookup_func(ft, name);
     if (idx != -1) {
         printf("SEMANTIC ERROR (%d): function '%s' already declared at line %d.\n",
                 yylineno, name, get_func_line(ft, idx));
         exit(EXIT_FAILURE);
     }
-    add_func(ft, name, yylineno, arity);
+    idx = add_func(ft, name, yylineno, arity);
     arity = 0;
+    return new_node(FUNCTION_DECL_NODE, idx, INT_TYPE);
 }
 
 // Error handling.
@@ -280,10 +289,12 @@ int main() {
     print_var_table(vt); printf("\n\n");
     print_func_table(ft); printf("\n\n");
     
+    print_dot(root);
 
     free_str_table(st);
     free_var_table(vt);
     free_func_table(ft);
+    free_tree(root);
     yylex_destroy();    // To avoid memory leaks within flex...
 
     return 0;

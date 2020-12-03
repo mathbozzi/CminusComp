@@ -5,6 +5,7 @@
 typedef enum {
     INT_TYPE,
     VOID_TYPE,
+    NO_TYPE,
 } Type;
 
 const char* get_text(Type type);

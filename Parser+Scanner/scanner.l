@@ -6,12 +6,11 @@
 %option yylineno
 
 %{
-#include <stdio.h>
-#include <string.h>
+
 #include "types.h"
 #include "tables.h"
+#include "ast.h"
 #include "parser.h"
-
 
 void yyerror(const char *s);
 
