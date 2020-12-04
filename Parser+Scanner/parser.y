@@ -38,7 +38,7 @@ char* id;
 int num;
 char* func_id;
 
-AST* root;
+AST* root = NULL;
 
 %}
 
@@ -62,20 +62,20 @@ AST* root;
 %%
 
 program:
-  func_decl_list { root = new_subtree(FUNC_LIST_NODE, NO_TYPE, 0); }
+  func_decl_list { root = new_subtree(PROGRAM_NODE, NO_TYPE, 1, $1); }
 ;
 
 func_decl_list:
-  func_decl_list func_decl
-| func_decl { scope++; }
+  func_decl                { $$ = new_subtree(FUNC_LIST_NODE, NO_TYPE, 1, $1); scope++; }
+| func_decl_list func_decl { add_child($1, $2); $$ = $1; }
 ;
 
 func_decl:
-  func_header func_body
+  func_header func_body   { $$ = $1; }
 ;
 
 func_header:
-  ret_type ID { func_id = id; } LPAREN params RPAREN { new_func(func_id); }
+  ret_type ID { func_id = id; } LPAREN params RPAREN { $$ = new_func(func_id); }
 ;
 
 func_body:

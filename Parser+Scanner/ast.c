@@ -33,6 +33,10 @@ AST* new_node(NodeKind kind, int data, Type type) {
 }
 
 void add_child(AST *parent, AST *child) {
+    if(parent == NULL){
+        printf("Pai nulo. Algo está errado.\n");
+        return;
+    }
     if (parent->count == CHILDREN_LIMIT) {
         fprintf(stderr, "Cannot add another child!\n");
         exit(1);
