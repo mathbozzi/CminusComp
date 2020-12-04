@@ -129,6 +129,11 @@ char* kind2str(NodeKind kind) {
         case FUNCTION_CALL_NODE: return "fcall";
         case FUNCTION_DECL_NODE: return "func_decl";
         case FUNC_LIST_NODE:     return "func_list";
+        case FUNCTION_NAME_NODE: return "func_name";
+        case FUNCTION_HEADER_NODE: return "func_header";
+        case FUNCTION_BODY_NODE: return "func_body";
+        case PARAM_LIST_NODE: return "param_list";
+        case STATEMENT_LIST_NODE: return "stmt_list";
         default:            return "ERROR!!";
     }
 }
@@ -141,8 +146,6 @@ int has_data(NodeKind kind) {
         case STR_VAL_NODE:
         case VAR_DECL_NODE:
         case VAR_USE_NODE:
-        case FUNCTION_DECL_NODE:
-        case FUNCTION_CALL_NODE:
             return 1;
         default:
             return 0;
@@ -158,7 +161,7 @@ int print_node_dot(AST *node) {
     }
     if (node->kind == VAR_DECL_NODE || node->kind == VAR_USE_NODE) {
         fprintf(stderr, "%s@", get_name(vt, node->data.as_int));
-    } else if(node->kind == FUNCTION_DECL_NODE || node->kind == FUNCTION_CALL_NODE){
+    } else if(node->kind == FUNCTION_NAME_NODE || node->kind == FUNCTION_CALL_NODE){
         fprintf(stderr, "%s@", get_func_name(ft, node->data.as_int));
     } else {
         fprintf(stderr, "%s", kind2str(node->kind));

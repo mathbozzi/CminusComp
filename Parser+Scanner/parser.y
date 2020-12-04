@@ -71,25 +71,25 @@ func_decl_list:
 ;
 
 func_decl:
-  func_header func_body   { $$ = $1; }
+  func_header func_body   { $$ = new_subtree(FUNCTION_DECL_NODE, NO_TYPE, 2, $1, $2); }
 ;
 
 func_header:
-  ret_type ID { func_id = id; } LPAREN params RPAREN { $$ = new_func(func_id); }
+  ret_type ID { func_id = id; } LPAREN params RPAREN { $$ = new_subtree(FUNCTION_HEADER_NODE, NO_TYPE, 2, new_func(func_id), $5); }
 ;
 
 func_body:
-  LBRACE opt_var_decl opt_stmt_list RBRACE
+  LBRACE opt_var_decl opt_stmt_list RBRACE { $$ = new_subtree(FUNCTION_BODY_NODE, NO_TYPE, 1, $2); }
 ;
 
 opt_var_decl:
-  %empty
-| var_decl_list
+  %empty          { $$ = new_subtree(VAR_LIST_NODE, NO_TYPE, 0); }
+| var_decl_list   { $$ = $1; }
 ;
 
 opt_stmt_list:
-  %empty
-| stmt_list
+  %empty          { $$ = new_subtree(STATEMENT_LIST_NODE, NO_TYPE, 0); }
+| stmt_list       { $$ = $1; }
 ;
 
 ret_type:
@@ -98,28 +98,28 @@ ret_type:
 ;
 
 params:
-  VOID
-| param_list
+  VOID            { $$ = new_subtree(PARAM_LIST_NODE, NO_TYPE, 0); }
+| param_list      { $$ = $1; }
 ;
 
 param_list:
-  param_list COMMA param
-| param
+  param                   { $$ = new_subtree(PARAM_LIST_NODE, NO_TYPE, 1, $1); }
+| param_list COMMA param  { add_child($1, $3); $$ = $1; }
 ;
 
 param:
-  INT ID { new_var(id, 0); arity++; }
-| INT ID LBRACK RBRACK { new_var(id, -1); arity++; }
+  INT ID { $$ = new_var(id, 0); arity++; }
+| INT ID LBRACK RBRACK { $$ = new_var(id, -1); arity++; }
 ;
 
 var_decl_list:
-  var_decl_list var_decl
-| var_decl
+  var_decl                  { $$ = new_subtree(VAR_LIST_NODE, NO_TYPE, 1, $1); }
+| var_decl_list var_decl    { add_child($1, $2); $$ = $1; }
 ;
 
 var_decl:
-  INT ID { new_var(id, 0); } SEMI
-| INT ID LBRACK NUM RBRACK { new_var(id, num); } SEMI
+  INT ID { $2 = new_var(id, 0); } SEMI { $$ = $2; }
+| INT ID LBRACK NUM RBRACK { $2 = new_var(id, num); } SEMI { $$ = $2; }
 ;
 
 stmt_list:
@@ -266,7 +266,7 @@ AST* new_func(char* name) {
     }
     idx = add_func(ft, name, yylineno, arity, func_type);
     arity = 0;
-    return new_node(FUNCTION_DECL_NODE, idx, func_type);
+    return new_node(FUNCTION_NAME_NODE, idx, func_type);
 }
 
 // Error handling.

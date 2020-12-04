@@ -27,6 +27,11 @@ typedef enum {
     FUNCTION_CALL_NODE,
     FUNCTION_DECL_NODE,
     FUNC_LIST_NODE,
+    FUNCTION_NAME_NODE,
+    FUNCTION_HEADER_NODE,
+    FUNCTION_BODY_NODE,
+    PARAM_LIST_NODE,
+    STATEMENT_LIST_NODE,
 } NodeKind;
 
 struct node; // Opaque structure to ensure encapsulation.
