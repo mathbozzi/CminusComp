@@ -28,7 +28,7 @@ StrTable *st;
 VarTable *vt;
 FuncTable *ft;
 
-Type last_decl_type;
+Type func_type;
 
 int scope = 0; /* contador de escopo para adição de variáveis na vt. */
 int arity = 0; /* contador de aridade para adição de funções na ft. É resetado quando uma função é adicionada. */
@@ -93,8 +93,8 @@ opt_stmt_list:
 ;
 
 ret_type:
-  INT
-| VOID
+  INT   { func_type = INT_TYPE; }
+| VOID  { func_type = VOID_TYPE; }
 ;
 
 params:
@@ -264,9 +264,9 @@ AST* new_func(char* name) {
                 yylineno, name, get_func_line(ft, idx));
         exit(EXIT_FAILURE);
     }
-    idx = add_func(ft, name, yylineno, arity);
+    idx = add_func(ft, name, yylineno, arity, func_type);
     arity = 0;
-    return new_node(FUNCTION_DECL_NODE, idx, INT_TYPE);
+    return new_node(FUNCTION_DECL_NODE, idx, func_type);
 }
 
 // Error handling.

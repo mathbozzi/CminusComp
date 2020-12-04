@@ -127,6 +127,7 @@ typedef struct {
   char name[VARIABLE_MAX_SIZE];
   int line;
   int arity; /* o número de parâmetros da função. */
+  Type type;
 } FuncEntry;
 
 struct func_table {
@@ -140,10 +141,11 @@ FuncTable* create_func_table(){
     return ft;    
 }
 
-int add_func(FuncTable* ft, char* s, int line, int arity){
+int add_func(FuncTable* ft, char* s, int line, int arity, Type type){
     strcpy(ft->t[ft->size].name, s);
     ft->t[ft->size].line = line;
     ft->t[ft->size].arity = arity;
+    ft->t[ft->size].type = type;
     int idx_added = ft->size;
     ft->size++;
     return idx_added;
@@ -170,10 +172,14 @@ int get_func_arity(FuncTable* ft, int i){
     return ft->t[i].arity;
 }
 
+int get_func_type(FuncTable* ft, int i){
+    return ft->t[i].type;
+}
+
 void print_func_table(FuncTable* ft){
     printf("Functions table:\n");
     for (int i = 0; i < ft->size; i++) {
-         printf("Entry %d -- name: %s, line: %d, arity: %d\n", i,
+         printf("Entry %d -- type: %s, name: %s, line: %d, arity: %d\n", i, get_text(get_func_type(ft, i)), 
                 get_func_name(ft, i), get_func_line(ft, i), get_func_arity(ft, i));
     }
 }

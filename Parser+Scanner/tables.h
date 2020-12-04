@@ -80,7 +80,7 @@ FuncTable* create_func_table();
 // Adds a fresh func to the table.
 // No check is made by this function, so make sure to call 'lookup_func' first.
 // Returns the index where the function was inserted.
-int add_func(FuncTable* ft, char* s, int line, int arity);
+int add_func(FuncTable* ft, char* s, int line, int arity, Type type);
 
 // Returns the index where the given function is stored or -1 otherwise.
 int lookup_func(FuncTable* ft, char* s);
@@ -96,6 +96,8 @@ int get_func_line(FuncTable* ft, int i);
 // Returns the arity stored at the given index.
 // Retorna número de argumentos da função na posição i da tabela.
 int get_func_arity(FuncTable* ft, int i);
+
+int get_func_type(FuncTable* ft, int i);
 
 // Prints the given table to stdout.
 void print_func_table(FuncTable* ft);
