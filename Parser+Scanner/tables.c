@@ -38,7 +38,7 @@ char* get_string(StrTable* st, int i) {
 }
 
 void print_str_table(StrTable* st) {
-    printf("Strings table:\n");
+    printf("Literals table:\n");
     for (int i = 0; i < st->size; i++) {
         printf("Entry %d -- %s\n", i, get_string(st, i));
     }
@@ -72,10 +72,9 @@ VarTable* create_var_table() {
     return vt;
 }
 
-int lookup_var(VarTable* vt, char* s, int* scope) {
+int lookup_var(VarTable* vt, char* s, int scope) {
     for (int i = 0; i < vt->size; i++) {
-        if (strcmp(vt->t[i].name, s) == 0)  {
-            *scope = vt->t[i].scope;
+        if (strcmp(vt->t[i].name, s) == 0 && scope == vt->t[i].scope)  {
             return i;
         }
     }

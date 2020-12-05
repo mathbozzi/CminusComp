@@ -73,9 +73,9 @@ SLC         "//"[^\n]*\n
 "{"             { process_token(LBRACE); }
 "}"             { process_token(RBRACE); }
 
-{number}        { num = atoi(yytext); yylval = new_node(INT_VAL_NODE, num, INT_TYPE); process_token(NUM); }
+{number}        { num = atoi(yytext); yylval = new_node(INT_VAL_NODE, num); process_token(NUM); }
 {identifier}    { if(id != NULL) prev_id = strdup(id); id = strdup(yytext); process_token(ID); }
-{string}        { yylval = new_node(STR_VAL_NODE, add_string(st, yytext), STR_TYPE); process_token(STRING); }
+{string}        { yylval = new_node(STR_VAL_NODE, add_string(st, yytext)); process_token(STRING); }
 
                 /* Be sure to keep this as the last rule */
 .               { printf("SCANNING ERROR (%d): Unknown symbol %s\n", yylineno, yytext);

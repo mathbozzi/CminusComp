@@ -63,33 +63,33 @@ AST* root = NULL;
 %%
 
 program:
-  func_decl_list { root = new_subtree(PROGRAM_NODE, NO_TYPE, 1, $1); }
+  func_decl_list { root = $1; }
 ;
 
 func_decl_list:
-  func_decl                { $$ = new_subtree(FUNC_LIST_NODE, NO_TYPE, 1, $1); scope++; }
-| func_decl_list func_decl { add_child($1, $2); $$ = $1; }
+  func_decl                { $$ = new_subtree(FUNC_LIST_NODE, 1, $1); scope++; }
+| func_decl_list func_decl { add_child($1, $2); $$ = $1; scope++; }
 ;
 
 func_decl:
-  func_header func_body   { $$ = new_subtree(FUNCTION_DECL_NODE, NO_TYPE, 2, $1, $2); }
+  func_header func_body   { $$ = new_subtree(FUNCTION_DECL_NODE, 2, $1, $2); }
 ;
 
 func_header:
-  ret_type ID { func_id = id; } LPAREN params RPAREN { $$ = new_subtree(FUNCTION_HEADER_NODE, NO_TYPE, 2, new_func(func_id), $5); }
+  ret_type ID { func_id = id; } LPAREN params RPAREN { $$ = new_subtree(FUNCTION_HEADER_NODE, 2, new_func(func_id), $5); }
 ;
 
 func_body:
-  LBRACE opt_var_decl opt_stmt_list RBRACE { $$ = new_subtree(FUNCTION_BODY_NODE, NO_TYPE, 2, $2, $3); }
+  LBRACE opt_var_decl opt_stmt_list RBRACE { $$ = new_subtree(FUNCTION_BODY_NODE, 2, $2, $3); }
 ;
 
 opt_var_decl:
-  %empty          { $$ = new_subtree(VAR_LIST_NODE, NO_TYPE, 0); }
+  %empty          { $$ = new_subtree(VAR_LIST_NODE, 0); }
 | var_decl_list   { $$ = $1; }
 ;
 
 opt_stmt_list:
-  %empty          { $$ = new_subtree(BLOCK_NODE, NO_TYPE, 0); }
+  %empty          { $$ = new_subtree(BLOCK_NODE, 0); }
 | stmt_list       { $$ = $1; }
 ;
 
@@ -99,12 +99,12 @@ ret_type:
 ;
 
 params:
-  VOID            { $$ = new_subtree(PARAM_LIST_NODE, NO_TYPE, 0); }
+  VOID            { $$ = new_subtree(PARAM_LIST_NODE, 0); }
 | param_list      { $$ = $1; }
 ;
 
 param_list:
-  param                   { $$ = new_subtree(PARAM_LIST_NODE, NO_TYPE, 1, $1); }
+  param                   { $$ = new_subtree(PARAM_LIST_NODE, 1, $1); }
 | param_list COMMA param  { add_child($1, $3); $$ = $1; }
 ;
 
@@ -114,7 +114,7 @@ param:
 ;
 
 var_decl_list:
-  var_decl                  { $$ = new_subtree(VAR_LIST_NODE, NO_TYPE, 1, $1); }
+  var_decl                  { $$ = new_subtree(VAR_LIST_NODE, 1, $1); }
 | var_decl_list var_decl    { add_child($1, $2); $$ = $1; }
 ;
 
@@ -124,7 +124,7 @@ var_decl:
 ;
 
 stmt_list:
-  stmt            { $$ = new_subtree(BLOCK_NODE, NO_TYPE, 1, $1); }
+  stmt            { $$ = new_subtree(BLOCK_NODE, 1, $1); }
 | stmt_list stmt  { add_child($1, $2); $$ = $1; }
 ;
 
@@ -137,7 +137,7 @@ stmt:
 ;
 
 assign_stmt:
-  lval ASSIGN arith_expr SEMI { $$ = new_subtree(ASSIGN_NODE, NO_TYPE, 2, $1, $3); }
+  lval ASSIGN arith_expr SEMI { $$ = new_subtree(ASSIGN_NODE, 2, $1, $3); }
 ;
 
 lval:
@@ -147,8 +147,8 @@ lval:
 ;
 
 if_stmt:
-  IF LPAREN bool_expr RPAREN block            { $$ = new_subtree(IF_NODE, NO_TYPE, 2, $3, $5); }
-| IF LPAREN bool_expr RPAREN block ELSE block { $$ = new_subtree(IF_NODE, NO_TYPE, 3, $3, $5, $7); }
+  IF LPAREN bool_expr RPAREN block            { $$ = new_subtree(IF_NODE, 2, $3, $5); }
+| IF LPAREN bool_expr RPAREN block ELSE block { $$ = new_subtree(IF_NODE, 3, $3, $5, $7); }
 ;
 
 block:
@@ -156,30 +156,30 @@ block:
 ;
 
 while_stmt:
-  WHILE LPAREN bool_expr RPAREN block          { $$ = new_subtree(WHILE_NODE, NO_TYPE, 2, $3, $5); }
+  WHILE LPAREN bool_expr RPAREN block          { $$ = new_subtree(WHILE_NODE, 2, $3, $5); }
 ;
 
 return_stmt:
-  RETURN SEMI                                  { $$ = new_subtree(RETURN_NODE, NO_TYPE, 0); }
-| RETURN arith_expr SEMI                       { $$ = new_subtree(RETURN_NODE, NO_TYPE, 1, $2); }
+  RETURN SEMI                                  { $$ = new_subtree(RETURN_NODE, 0); }
+| RETURN arith_expr SEMI                       { $$ = new_subtree(RETURN_NODE, 1, $2); }
 ;
 
 func_call:
   output_call                     { $$ = $1; }
 | write_call                      { $$ = $1; }
-| user_func_call                  { $$ = new_subtree(FUNCTION_CALL_NODE, NO_TYPE, 1, $1); }
+| user_func_call                  { $$ = $1; }
 ;
 
 input_call:
-  INPUT LPAREN RPAREN             { $$ = new_subtree(INPUT_NODE, NO_TYPE, 0); }
+  INPUT LPAREN RPAREN             { $$ = new_subtree(INPUT_NODE, 0); }
 ;
 
 output_call:
-  OUTPUT LPAREN arith_expr RPAREN { $$ = new_subtree(OUTPUT_NODE, NO_TYPE, 1, $3); }
+  OUTPUT LPAREN arith_expr RPAREN { $$ = new_subtree(OUTPUT_NODE, 1, $3); }
 ;
 
 write_call:
-  WRITE LPAREN STRING RPAREN      { $$ = new_subtree(WRITE_NODE, NO_TYPE, 1, $3); }
+  WRITE LPAREN STRING RPAREN      { $$ = new_subtree(WRITE_NODE, 1, $3); }
 ;
 
 user_func_call:
@@ -187,29 +187,29 @@ user_func_call:
 ;
 
 opt_arg_list:
-  %empty          { $$ = new_subtree(ARG_LIST_NODE, NO_TYPE, 0); }
+  %empty          { $$ = new_subtree(ARG_LIST_NODE, 0); }
 | arg_list        { $$ = $1; }
 ;
 
 arg_list:
-  arith_expr                { $$ = new_subtree(ARG_LIST_NODE, NO_TYPE, 1, $1); arguments++; }
+  arith_expr                { $$ = new_subtree(ARG_LIST_NODE, 1, $1); arguments++; }
 | arg_list COMMA arith_expr { add_child($1, $3); $$ = $1; arguments++; } 
 ;
 
 bool_expr:
-  arith_expr LT arith_expr  { $$ = new_subtree(LT_NODE, NO_TYPE, 2, $1, $3); }
-| arith_expr LE arith_expr  { $$ = new_subtree(LE_NODE, NO_TYPE, 2, $1, $3); }
-| arith_expr GT arith_expr  { $$ = new_subtree(GT_NODE, NO_TYPE, 2, $1, $3); }
-| arith_expr GE arith_expr  { $$ = new_subtree(GE_NODE, NO_TYPE, 2, $1, $3); }
-| arith_expr EQ arith_expr  { $$ = new_subtree(EQ_NODE, NO_TYPE, 2, $1, $3); }
-| arith_expr NEQ arith_expr { $$ = new_subtree(NEQ_NODE, NO_TYPE, 2, $1, $3); }
+  arith_expr LT arith_expr  { $$ = new_subtree(LT_NODE, 2, $1, $3); }
+| arith_expr LE arith_expr  { $$ = new_subtree(LE_NODE, 2, $1, $3); }
+| arith_expr GT arith_expr  { $$ = new_subtree(GT_NODE, 2, $1, $3); }
+| arith_expr GE arith_expr  { $$ = new_subtree(GE_NODE, 2, $1, $3); }
+| arith_expr EQ arith_expr  { $$ = new_subtree(EQ_NODE, 2, $1, $3); }
+| arith_expr NEQ arith_expr { $$ = new_subtree(NEQ_NODE, 2, $1, $3); }
 ;
 
 arith_expr:
-  arith_expr PLUS arith_expr    { $$ = new_subtree(PLUS_NODE, NO_TYPE, 2, $1, $3); }
-| arith_expr MINUS arith_expr   { $$ = new_subtree(MINUS_NODE, NO_TYPE, 2, $1, $3); }
-| arith_expr TIMES arith_expr   { $$ = new_subtree(TIMES_NODE, NO_TYPE, 2, $1, $3); }
-| arith_expr OVER arith_expr    { $$ = new_subtree(OVER_NODE, NO_TYPE, 2, $1, $3); }
+  arith_expr PLUS arith_expr    { $$ = new_subtree(PLUS_NODE, 2, $1, $3); }
+| arith_expr MINUS arith_expr   { $$ = new_subtree(MINUS_NODE, 2, $1, $3); }
+| arith_expr TIMES arith_expr   { $$ = new_subtree(TIMES_NODE, 2, $1, $3); }
+| arith_expr OVER arith_expr    { $$ = new_subtree(OVER_NODE, 2, $1, $3); }
 | LPAREN arith_expr RPAREN      { $$ = $2; }
 | lval                          { $$ = $1; }
 | input_call                    { $$ = $1; }
@@ -220,26 +220,24 @@ arith_expr:
 %%
 
 AST* check_var(char* name) {
-    int var_scope = -1;
-    int idx = lookup_var(vt, name, &var_scope);
+    int idx = lookup_var(vt, name, scope);
     if (idx == -1) {
         printf("SEMANTIC ERROR (%d): variable '%s' was not declared.\n",
                 yylineno, name);
         exit(EXIT_FAILURE);
     }
-    return new_node(VAR_USE_NODE, idx, INT_TYPE);
+    return new_node(VAR_USE_NODE, idx);
 }
 
 AST* new_var(char* name, int size) {
-    int var_scope = -1;
-    int idx = lookup_var(vt, name, &var_scope);
-    if (idx != -1 && var_scope == scope) {
+    int idx = lookup_var(vt, name, scope);
+    if (idx != -1) {
         printf("SEMANTIC ERROR (%d): variable '%s' already declared at line %d.\n",
                 yylineno, name, get_line(vt, idx));
         exit(EXIT_FAILURE);
     }
     idx = add_var(vt, name, yylineno, scope, size);
-    return new_node(VAR_DECL_NODE, idx, INT_TYPE);
+    return new_node(VAR_DECL_NODE, idx);
 }
 
 AST* check_func(char* name) {
@@ -255,7 +253,7 @@ AST* check_func(char* name) {
         exit(EXIT_FAILURE);
       }
     }
-  return new_node(FUNCTION_CALL_NODE, idx, INT_TYPE);
+  return new_node(FUNCTION_CALL_NODE, idx);
 }
 
 AST* new_func(char* name) {
@@ -267,7 +265,7 @@ AST* new_func(char* name) {
     }
     idx = add_func(ft, name, yylineno, arity, func_type);
     arity = 0;
-    return new_node(FUNCTION_NAME_NODE, idx, func_type);
+    return new_node(FUNCTION_NAME_NODE, idx);
 }
 
 // Error handling.

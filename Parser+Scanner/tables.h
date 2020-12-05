@@ -48,7 +48,7 @@ VarTable* create_var_table();
 int add_var(VarTable* vt, char* s, int line, int scope, int size);
 
 // Returns the index where the given variable is stored or -1 otherwise.
-int lookup_var(VarTable* vt, char* s, int* scope);
+int lookup_var(VarTable* vt, char* s, int scope);
 
 // Returns the variable name stored at the given index.
 // No check is made by this function, so make sure that the index is valid first.
@@ -61,6 +61,8 @@ int get_line(VarTable* vt, int i);
 // Returns the variable size stored at the given index.
 // 0 para inteiro, -1 se referência a vetor em parâmetro de função ou tamanho do vetor se vetor.
 int get_size(VarTable* vt, int i);
+
+int get_scope(VarTable* vt, int i);
 
 // Prints the given table to stdout.
 void print_var_table(VarTable* vt);

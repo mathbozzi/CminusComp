@@ -11,20 +11,15 @@
 
 struct node {
     NodeKind kind;
-    union {
-        int   as_int;
-        float as_float;
-    } data;
-    Type type;
+    int data; /* Se kind é variável ou função, data representa a posição na respectiva tabela. Se é número, representa o número. */
     int count;
     AST* child[CHILDREN_LIMIT];
 };
 
-AST* new_node(NodeKind kind, int data, Type type) {
+AST* new_node(NodeKind kind, int data) {
     AST* node = malloc(sizeof * node);
     node->kind = kind;
-    node->data.as_int = data;
-    node->type = type;
+    node->data = data;
     node->count = 0;
     for (int i = 0; i < CHILDREN_LIMIT; i++) {
         node->child[i] = NULL;
@@ -49,13 +44,13 @@ AST* get_child(AST *parent, int idx) {
     return parent->child[idx];
 }
 
-AST* new_subtree(NodeKind kind, Type type, int child_count, ...) {
+AST* new_subtree(NodeKind kind, int child_count, ...) {
     if (child_count > CHILDREN_LIMIT) {
         fprintf(stderr, "Too many children as arguments!\n");
         exit(1);
     }
 
-    AST* node = new_node(kind, 0, type);
+    AST* node = new_node(kind, 0);
     va_list ap;
     va_start(ap, child_count);
     for (int i = 0; i < child_count; i++) {
@@ -70,19 +65,7 @@ NodeKind get_kind(AST *node) {
 }
 
 int get_data(AST *node) {
-    return node->data.as_int;
-}
-
-void set_float_data(AST *node, float data) {
-    node->data.as_float = data;
-}
-
-float get_float_data(AST *node) {
-    return node->data.as_float;
-}
-
-Type get_node_type(AST *node) {
-    return node->type;
+    return node->data;
 }
 
 int get_child_count(AST *node) {
@@ -107,13 +90,13 @@ extern FuncTable *ft;
 char* kind2str(NodeKind kind) {
     switch(kind) {
         case ARG_LIST_NODE: return "arg_list";
-        case ASSIGN_NODE:   return ":=";
+        case ASSIGN_NODE:   return "=";
         case EQ_NODE:       return "==";
         case BLOCK_NODE:    return "block";
         case BOOL_VAL_NODE: return "";
         case IF_NODE:       return "if";
         case INPUT_NODE:    return "input";
-        case INT_VAL_NODE:  return "";
+        case INT_VAL_NODE:  return "num";
         case LE_NODE:       return "<=";
         case LT_NODE:       return "<";
         case MINUS_NODE:    return "-";
@@ -125,7 +108,7 @@ char* kind2str(NodeKind kind) {
         case READ_NODE:     return "read";
         case REAL_VAL_NODE: return "";
         case REPEAT_NODE:   return "repeat";
-        case STR_VAL_NODE:  return "";
+        case STR_VAL_NODE:  return "string";
         case TIMES_NODE:    return "*";
         case VAR_DECL_NODE: return "var_decl";
         case VAR_LIST_NODE: return "var_list";
@@ -149,12 +132,12 @@ char* kind2str(NodeKind kind) {
 
 int has_data(NodeKind kind) {
     switch(kind) {
-        case BOOL_VAL_NODE:
         case INT_VAL_NODE:
-        case REAL_VAL_NODE:
         case STR_VAL_NODE:
         case VAR_DECL_NODE:
         case VAR_USE_NODE:
+        case FUNCTION_NAME_NODE:
+        case FUNCTION_CALL_NODE:
             return 1;
         default:
             return 0;
@@ -164,28 +147,24 @@ int has_data(NodeKind kind) {
 int print_node_dot(AST *node) {
     int my_nr = nr++;
 
+    int debug = 0;
+
     fprintf(stderr, "node%d[label=\"", my_nr);
-    if (node->type != NO_TYPE) {
-        fprintf(stderr, "(%s) ", get_text(node->type));
-    }
-    if (node->kind == VAR_DECL_NODE || node->kind == VAR_USE_NODE) {
-        fprintf(stderr, "%s@", get_name(vt, node->data.as_int));
-    } else if(node->kind == FUNCTION_NAME_NODE || node->kind == FUNCTION_CALL_NODE){
-        fprintf(stderr, "%s@", get_func_name(ft, node->data.as_int));
-    } else {
-        fprintf(stderr, "%s", kind2str(node->kind));
+    fprintf(stderr, "%s", kind2str(node->kind));
+
+    if (has_data(node->kind)){
+        fprintf(stderr, ",%d", node->data);
     }
 
-
-    if (has_data(node->kind)) {
-        if (node->kind == REAL_VAL_NODE) {
-            fprintf(stderr, "%.2f", node->data.as_float);
-        } else if (node->kind == STR_VAL_NODE) {
-            fprintf(stderr, "@%d", node->data.as_int);
-        } else {
-            fprintf(stderr, "%d", node->data.as_int);
+    if(debug){
+        if(node->kind == VAR_USE_NODE || node->kind == VAR_DECL_NODE){
+            fprintf(stderr, "(%s, scope = %d)", get_name(vt, node->data), get_scope(vt, node->data));
+        }
+        else if(node->kind == FUNCTION_CALL_NODE || node->kind == FUNCTION_NAME_NODE){
+            fprintf(stderr, "(%s)", get_func_name(ft, node->data));
         }
     }
+
     fprintf(stderr, "\"];\n");
 
     for (int i = 0; i < node->count; i++) {
