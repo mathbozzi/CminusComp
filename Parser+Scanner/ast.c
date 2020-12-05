@@ -111,9 +111,11 @@ char* kind2str(NodeKind kind) {
         case BLOCK_NODE:    return "block";
         case BOOL_VAL_NODE: return "";
         case IF_NODE:       return "if";
+        case INPUT_NODE:    return "input";
         case INT_VAL_NODE:  return "";
         case LT_NODE:       return "<";
         case MINUS_NODE:    return "-";
+        case OUTPUT_NODE:   return "output";
         case OVER_NODE:     return "/";
         case PLUS_NODE:     return "+";
         case PROGRAM_NODE:  return "program";
@@ -134,6 +136,8 @@ char* kind2str(NodeKind kind) {
         case FUNCTION_BODY_NODE: return "func_body";
         case PARAM_LIST_NODE: return "param_list";
         case STATEMENT_LIST_NODE: return "stmt_list";
+        case WHILE_NODE:    return "while";
+        case RETURN_NODE:   return "return";
         default:            return "ERROR!!";
     }
 }

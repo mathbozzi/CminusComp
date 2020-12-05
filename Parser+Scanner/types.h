@@ -5,6 +5,7 @@
 typedef enum {
     INT_TYPE,
     VOID_TYPE,
+    STR_TYPE,
     NO_TYPE,
 } Type;
 

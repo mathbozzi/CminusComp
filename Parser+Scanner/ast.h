@@ -9,9 +9,11 @@ typedef enum {
     BLOCK_NODE,
     BOOL_VAL_NODE,
     IF_NODE,
+    INPUT_NODE,
     INT_VAL_NODE,
     LT_NODE,
     MINUS_NODE,
+    OUTPUT_NODE,
     OVER_NODE,
     PLUS_NODE,
     PROGRAM_NODE,
@@ -32,6 +34,8 @@ typedef enum {
     FUNCTION_BODY_NODE,
     PARAM_LIST_NODE,
     STATEMENT_LIST_NODE,
+    WHILE_NODE,
+    RETURN_NODE,
 } NodeKind;
 
 struct node; // Opaque structure to ensure encapsulation.

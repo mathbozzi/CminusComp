@@ -79,7 +79,7 @@ func_header:
 ;
 
 func_body:
-  LBRACE opt_var_decl opt_stmt_list RBRACE { $$ = new_subtree(FUNCTION_BODY_NODE, NO_TYPE, 1, $2); }
+  LBRACE opt_var_decl opt_stmt_list RBRACE { $$ = new_subtree(FUNCTION_BODY_NODE, NO_TYPE, 2, $2, $3); }
 ;
 
 opt_var_decl:
@@ -88,7 +88,7 @@ opt_var_decl:
 ;
 
 opt_stmt_list:
-  %empty          { $$ = new_subtree(STATEMENT_LIST_NODE, NO_TYPE, 0); }
+  %empty          { $$ = new_subtree(BLOCK_NODE, NO_TYPE, 0); }
 | stmt_list       { $$ = $1; }
 ;
 
@@ -123,66 +123,66 @@ var_decl:
 ;
 
 stmt_list:
-  stmt_list stmt
-| stmt
+  stmt            { $$ = new_subtree(BLOCK_NODE, NO_TYPE, 1, $1); }
+| stmt_list stmt  { add_child($1, $2); $$ = $1; }
 ;
 
 stmt:
-  assign_stmt
-| if_stmt
-| while_stmt
-| return_stmt
-| func_call SEMI
+  assign_stmt     { $$ = $1; }
+| if_stmt         { $$ = $1; }
+| while_stmt      { $$ = $1; }
+| return_stmt     { $$ = $1; }
+| func_call SEMI  { $$ = $1; }
 ;
 
 assign_stmt:
-  lval ASSIGN arith_expr SEMI
+  lval ASSIGN arith_expr SEMI { $$ = new_subtree(ASSIGN_NODE, NO_TYPE, 2, $1, $3); }
 ;
 
 lval:
-  ID { check_var(id); }
-| ID LBRACK NUM RBRACK
-| ID LBRACK ID { check_var(id); } RBRACK
+  ID { $$ = check_var(id); }
+| ID LBRACK NUM RBRACK { $$ = check_var(id); }
+| ID LBRACK ID { $$ = check_var(id); } RBRACK { /* Isso esta causando problema. Programas com acesso por variavel (e.g. x[k] = ... ) dao (seg fault). */}
 ;
 
 if_stmt:
-  IF LPAREN bool_expr RPAREN block
-| IF LPAREN bool_expr RPAREN block ELSE block
+  IF LPAREN bool_expr RPAREN block            { $$ = new_subtree(IF_NODE, NO_TYPE, 2, $3, $5); }
+| IF LPAREN bool_expr RPAREN block ELSE block { $$ = new_subtree(IF_NODE, NO_TYPE, 3, $3, $5, $7); }
 ;
 
 block:
-  LBRACE opt_stmt_list RBRACE
+  LBRACE opt_stmt_list RBRACE                  { $$ = new_subtree(BLOCK_NODE, NO_TYPE, 0); }
 ;
 
 while_stmt:
-  WHILE LPAREN bool_expr RPAREN block
+  WHILE LPAREN bool_expr RPAREN block          { $$ = new_subtree(WHILE_NODE, NO_TYPE, 0); }
 ;
 
 return_stmt:
-  RETURN SEMI
-| RETURN arith_expr SEMI
+  RETURN SEMI                                  { $$ = new_subtree(RETURN_NODE, NO_TYPE, 0); }
+| RETURN arith_expr SEMI                       { $$ = new_subtree(RETURN_NODE, NO_TYPE, 1, $2); }
 ;
 
 func_call:
-  output_call
-| write_call
-| user_func_call
+  output_call                     { $$ = $1; }
+| write_call                      { $$ = $1; }
+| user_func_call                  { $$ = new_subtree(FUNCTION_CALL_NODE, NO_TYPE, 1, $1); }
 ;
 
 input_call:
-  INPUT LPAREN RPAREN
+  INPUT LPAREN RPAREN             { $$ = new_subtree(INPUT_NODE, NO_TYPE, 0); }
 ;
 
 output_call:
-  OUTPUT LPAREN arith_expr RPAREN
+  OUTPUT LPAREN arith_expr RPAREN { $$ = new_subtree(OUTPUT_NODE, NO_TYPE, 1, $3); }
 ;
 
 write_call:
-  WRITE LPAREN STRING RPAREN
+  WRITE LPAREN STRING RPAREN      { $$ = new_subtree(WRITE_NODE, NO_TYPE, 1, $3); }
 ;
 
 user_func_call:
-  ID {func_id = id; } LPAREN opt_arg_list RPAREN { check_func(func_id); arguments = 0; }
+  ID {func_id = id; } LPAREN opt_arg_list RPAREN { $$ = check_func(func_id); arguments = 0; }
 ;
 
 opt_arg_list:
@@ -205,15 +205,15 @@ bool_expr:
 ;
 
 arith_expr:
-  arith_expr PLUS arith_expr
-| arith_expr MINUS arith_expr
-| arith_expr TIMES arith_expr
-| arith_expr OVER arith_expr
-| LPAREN arith_expr RPAREN
-| lval
-| input_call
-| user_func_call
-| NUM
+  arith_expr PLUS arith_expr    { $$ = new_subtree(PLUS_NODE, NO_TYPE, 2, $1, $3); }
+| arith_expr MINUS arith_expr   { $$ = new_subtree(MINUS_NODE, NO_TYPE, 2, $1, $3); }
+| arith_expr TIMES arith_expr   { $$ = new_subtree(TIMES_NODE, NO_TYPE, 2, $1, $3); }
+| arith_expr OVER arith_expr    { $$ = new_subtree(OVER_NODE, NO_TYPE, 2, $1, $3); }
+| LPAREN arith_expr RPAREN      { $$ = $2; }
+| lval                          { $$ = $1; }
+| input_call                    { $$ = $1; }
+| user_func_call                { $$ = $1; }
+| NUM                           { $$ = $1; }
 ;
 
 %%
