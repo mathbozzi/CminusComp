@@ -17,6 +17,7 @@ void yyerror(const char *s);
 #define process_token(type) return type
 extern StrTable *st;
 extern char* id;
+extern char* prev_id;
 extern int num;
 %}
 
@@ -73,7 +74,7 @@ SLC         "//"[^\n]*\n
 "}"             { process_token(RBRACE); }
 
 {number}        { num = atoi(yytext); yylval = new_node(INT_VAL_NODE, num, INT_TYPE); process_token(NUM); }
-{identifier}    { id = strdup(yytext); process_token(ID); }
+{identifier}    { if(id != NULL) prev_id = strdup(id); id = strdup(yytext); process_token(ID); }
 {string}        { yylval = new_node(STR_VAL_NODE, add_string(st, yytext), STR_TYPE); process_token(STRING); }
 
                 /* Be sure to keep this as the last rule */

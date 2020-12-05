@@ -34,7 +34,8 @@ int scope = 0; /* contador de escopo para adição de variáveis na vt. */
 int arity = 0; /* contador de aridade para adição de funções na ft. É resetado quando uma função é adicionada. */
 int arguments = 0; /* contador de argumentos passados para uma função. É usado para checar se bate com a aridade. Também resetado após cada chamada de função. */
 
-char* id;
+char* id = NULL;
+char* prev_id; /* O acesso de uma posição de vetor através de variável requer dois ids, por isso esse ponteiro auxiliar guarda o id anterior. */
 int num;
 char* func_id;
 
@@ -142,7 +143,7 @@ assign_stmt:
 lval:
   ID { $$ = check_var(id); }
 | ID LBRACK NUM RBRACK { $$ = check_var(id); }
-| ID LBRACK ID { $$ = check_var(id); } RBRACK { /* Isso esta causando problema. Programas com acesso por variavel (e.g. x[k] = ... ) dao (seg fault). */}
+| ID LBRACK ID { $1 = check_var(prev_id); $2 = check_var(id); add_child($1, $2); $$ = $1; } RBRACK
 ;
 
 if_stmt:
