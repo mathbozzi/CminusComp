@@ -106,15 +106,18 @@ extern FuncTable *ft;
 
 char* kind2str(NodeKind kind) {
     switch(kind) {
+        case ARG_LIST_NODE: return "arg_list";
         case ASSIGN_NODE:   return ":=";
-        case EQ_NODE:       return "=";
+        case EQ_NODE:       return "==";
         case BLOCK_NODE:    return "block";
         case BOOL_VAL_NODE: return "";
         case IF_NODE:       return "if";
         case INPUT_NODE:    return "input";
         case INT_VAL_NODE:  return "";
+        case LE_NODE:       return "<=";
         case LT_NODE:       return "<";
         case MINUS_NODE:    return "-";
+        case NEQ_NODE:      return "!=";
         case OUTPUT_NODE:   return "output";
         case OVER_NODE:     return "/";
         case PLUS_NODE:     return "+";
@@ -134,6 +137,8 @@ char* kind2str(NodeKind kind) {
         case FUNCTION_NAME_NODE: return "func_name";
         case FUNCTION_HEADER_NODE: return "func_header";
         case FUNCTION_BODY_NODE: return "func_body";
+        case GE_NODE:            return ">=";
+        case GT_NODE:            return ">";
         case PARAM_LIST_NODE: return "param_list";
         case STATEMENT_LIST_NODE: return "stmt_list";
         case WHILE_NODE:    return "while";

@@ -152,11 +152,11 @@ if_stmt:
 ;
 
 block:
-  LBRACE opt_stmt_list RBRACE                  { $$ = new_subtree(BLOCK_NODE, NO_TYPE, 0); }
+  LBRACE opt_stmt_list RBRACE                  { $$ = $2; }
 ;
 
 while_stmt:
-  WHILE LPAREN bool_expr RPAREN block          { $$ = new_subtree(WHILE_NODE, NO_TYPE, 0); }
+  WHILE LPAREN bool_expr RPAREN block          { $$ = new_subtree(WHILE_NODE, NO_TYPE, 2, $3, $5); }
 ;
 
 return_stmt:
@@ -183,26 +183,26 @@ write_call:
 ;
 
 user_func_call:
-  ID {func_id = id; } LPAREN opt_arg_list RPAREN { $$ = check_func(func_id); arguments = 0; }
+  ID {func_id = id; } LPAREN opt_arg_list RPAREN { $1 = check_func(func_id); add_child($1, $4); $$ = $1; arguments = 0; }
 ;
 
 opt_arg_list:
-  %empty
-| arg_list
+  %empty          { $$ = new_subtree(ARG_LIST_NODE, NO_TYPE, 0); }
+| arg_list        { $$ = $1; }
 ;
 
 arg_list:
-  arg_list COMMA arith_expr { arguments++; }
-| arith_expr                { arguments++; }
+  arith_expr                { $$ = new_subtree(ARG_LIST_NODE, NO_TYPE, 1, $1); arguments++; }
+| arg_list COMMA arith_expr { add_child($1, $3); $$ = $1; arguments++; } 
 ;
 
 bool_expr:
-  arith_expr LT arith_expr
-| arith_expr LE arith_expr
-| arith_expr GT arith_expr
-| arith_expr GE arith_expr
-| arith_expr EQ arith_expr
-| arith_expr NEQ arith_expr
+  arith_expr LT arith_expr  { $$ = new_subtree(LT_NODE, NO_TYPE, 2, $1, $3); }
+| arith_expr LE arith_expr  { $$ = new_subtree(LE_NODE, NO_TYPE, 2, $1, $3); }
+| arith_expr GT arith_expr  { $$ = new_subtree(GT_NODE, NO_TYPE, 2, $1, $3); }
+| arith_expr GE arith_expr  { $$ = new_subtree(GE_NODE, NO_TYPE, 2, $1, $3); }
+| arith_expr EQ arith_expr  { $$ = new_subtree(EQ_NODE, NO_TYPE, 2, $1, $3); }
+| arith_expr NEQ arith_expr { $$ = new_subtree(NEQ_NODE, NO_TYPE, 2, $1, $3); }
 ;
 
 arith_expr:

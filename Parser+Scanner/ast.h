@@ -4,6 +4,7 @@
 #include "types.h"
 
 typedef enum {
+    ARG_LIST_NODE,
     ASSIGN_NODE,
     EQ_NODE,
     BLOCK_NODE,
@@ -11,8 +12,10 @@ typedef enum {
     IF_NODE,
     INPUT_NODE,
     INT_VAL_NODE,
+    LE_NODE,
     LT_NODE,
     MINUS_NODE,
+    NEQ_NODE,
     OUTPUT_NODE,
     OVER_NODE,
     PLUS_NODE,
@@ -32,6 +35,8 @@ typedef enum {
     FUNCTION_NAME_NODE,
     FUNCTION_HEADER_NODE,
     FUNCTION_BODY_NODE,
+    GE_NODE,
+    GT_NODE,
     PARAM_LIST_NODE,
     STATEMENT_LIST_NODE,
     WHILE_NODE,
