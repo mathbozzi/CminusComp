@@ -256,6 +256,7 @@ void run_program(AST* ast) {
 void run_input(AST* ast) {
     trace("input");
     int n;
+    printf("input: ");
     scanf("%d", &n);
     push(n);
 }
