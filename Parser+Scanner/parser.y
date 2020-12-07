@@ -143,7 +143,7 @@ assign_stmt:
 
 lval:
   ID { $$ = check_var(id); }
-| ID LBRACK NUM RBRACK { $$ = check_var(id); }
+| ID LBRACK NUM RBRACK { $1 = check_var(id); add_child($1, $3); $$ = $1; }
 | ID LBRACK ID { $1 = check_var(prev_id); $2 = check_var(id); add_child($1, $2); $$ = $1; } RBRACK
 ;
 
@@ -282,14 +282,14 @@ int main() {
     ft = create_func_table();
 
     yyparse();
-    printf("PARSE SUCCESSFUL!\n");
+    //printf("PARSE SUCCESSFUL!\n");
 
-    printf("\n\n");
-    print_str_table(st); printf("\n\n");
-    print_var_table(vt); printf("\n\n");
-    print_func_table(ft); printf("\n\n");
+    //printf("\n\n");
+    //print_str_table(st); printf("\n\n");
+    //print_var_table(vt); printf("\n\n");
+    //print_func_table(ft); printf("\n\n");
     
-    print_dot(root);
+    //print_dot(root);
 
     stdin = fopen(ctermid(NULL), "r");
     run_ast(root);

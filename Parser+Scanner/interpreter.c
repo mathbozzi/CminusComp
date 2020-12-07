@@ -15,7 +15,7 @@ extern FuncTable *ft;
 
 // Data stack -----------------------------------------------------------------
 
-#define STACK_SIZE 100
+#define STACK_SIZE 1000
 
 int stack[STACK_SIZE];
 int sp; // stack pointer
@@ -49,7 +49,7 @@ void print_stack() {
 
 // Variables memory -----------------------------------------------------------
 
-#define MEM_SIZE 100
+#define MEM_SIZE 300
 
 int mem[MEM_SIZE];
 
@@ -89,16 +89,6 @@ void print_mem(){
 #define clear_str_buf() str_buf[0] = '\0'
 
 void rec_run_ast(AST* ast);
-
-void read_int(int var_idx) {
-    int x;
-    scanf("%d", &x);
-    store(var_idx, x);
-}
-
-void write_int() {
-    printf("%d\n", pop());
-}
 
 #define run_bin_op()                \
     AST* lexpr = get_child(ast, 0); \
@@ -165,12 +155,41 @@ int int_gt(int l, int r){
 
 // ----------------------------------------------------------------------------
 
+int get_offset(AST* ast){
+    AST* child = get_child(ast, 0);
+    int offset;
+
+    if(get_kind(child) == INT_VAL_NODE){
+        offset = get_data(child);
+    }
+    else if(get_kind(child) == VAR_USE_NODE){
+        int var_idx = get_data(child);
+        int var_addr = get_address(vt, var_idx);
+        offset = load(var_addr);
+    }
+    else{
+        printf("Nó de acesso não é nem inteiro nem variável. Algo está errado.\n");
+    }
+
+    return offset;
+}
+
 void run_assign(AST* ast) {
     trace("assign");
     AST* rexpr = get_child(ast, 1);
     rec_run_ast(rexpr);
-    int var_idx = get_data(get_child(ast, 0));
-    store(var_idx, pop());
+    
+    AST* lval = get_child(ast, 0); 
+    int var_idx = get_data(lval);
+    int var_addr = get_address(vt, var_idx);
+
+    if(get_child_count(lval) == 1){
+        int offset = get_offset(lval);
+        store(var_addr + offset, pop());
+    }
+    else{
+        store(var_addr, pop());
+    }
 }
 
 void run_eq(AST* ast) {
@@ -189,11 +208,6 @@ void run_block(AST* ast) {
     for (int i = 0; i < size; i++) {
         rec_run_ast(get_child(ast, i));
     }
-}
-
-void run_bool_val(AST* ast) {
-    trace("bool_val");
-    push(get_data(ast));
 }
 
 void run_if(AST* ast) {
@@ -284,9 +298,19 @@ void run_times(AST* ast) {
 
 void run_var_decl(AST* ast) {
     trace("var_decl");
+    // Esse trecho de código inicializa os parâmetros de uma função.
+    // Obtém o id do parâmetro na tabela vt, depois obtém seu endereço de memória. Depois, pega o que está na pilha e joga para esse endereço.
+    // Checa se o size é -1. Se é, é um vetor e não deve haver passagem por cópia, mas sim modificação do endereço.
     int var_idx = get_data(ast);
-    store(var_idx, pop());
-    // Nothing to do, memory was already cleared upon initialization.
+    int var_addr = get_address(vt, var_idx);
+    int var_size = get_size(vt, var_idx);
+
+    if(var_size == -1){
+        set_address(vt, var_idx, pop());
+    }
+    else{
+        store(var_addr, pop());
+    }
 }
 
 void run_var_list(AST* ast) {
@@ -297,7 +321,23 @@ void run_var_list(AST* ast) {
 void run_var_use(AST* ast) {
     trace("var_use");
     int var_idx = get_data(ast);
-    push(load(var_idx));
+    int var_addr = get_address(vt, var_idx);
+
+    int child_count = get_child_count(ast);
+    
+    if(child_count == 1){
+        // A variável acessada é um vetor e a posição é indicada pelo filho.
+        int offset = get_offset(ast);    
+        push(load(var_addr + offset));
+    }
+    else if(child_count == 0 && get_size(vt, var_idx) != 0){
+         // É um vetor e está sendo usado sem índice, logo é passagem por referência, deve empilhar o endereço.
+         push(var_addr);
+    }
+    else{
+        // É uma variável comum.
+        push(load(var_addr));
+    }
 }
 
 void print_string(char* s){
@@ -457,21 +497,6 @@ void rec_run_ast(AST* ast) {
         case RETURN_NODE:           run_return(ast);        break;
 
         case VAR_DECL_NODE:         run_var_decl(ast);      break;
-
-        /*
-        case ASSIGN_NODE:   run_assign(ast);    break;--
-        case EQ_NODE:       run_eq(ast);        break;
-        case BLOCK_NODE:    run_block(ast);     break;--
-        case BOOL_VAL_NODE: run_bool_val(ast);  break;
-        case PROGRAM_NODE:  run_program(ast);   break;
-        
-        case STR_VAL_NODE:  run_str_val(ast);   break;
-        case TIMES_NODE:    run_times(ast);     break;--
-        
-        case VAR_LIST_NODE: run_var_list(ast);  break;--
-        case VAR_USE_NODE:  run_var_use(ast);   break;--
-        case WRITE_NODE:    run_write(ast);     break;--
-        */
 
         default:
             fprintf(stderr, "Invalid kind: %s!\n", kind2str(get_kind(ast)));

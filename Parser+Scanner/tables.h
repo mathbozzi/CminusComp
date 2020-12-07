@@ -64,6 +64,8 @@ int get_line(VarTable* vt, int i);
 int get_size(VarTable* vt, int i);
 
 int get_scope(VarTable* vt, int i);
+int get_address(VarTable* vt, int i);
+void set_address(VarTable* vt, int i, int addr);
 
 // Prints the given table to stdout.
 void print_var_table(VarTable* vt);

@@ -5,6 +5,8 @@
 #include "tables.h"
 #include "ast.h"
 
+static int address_counter = 0; // É responsável por determinar a posição em memória de uma variável no momento da adição na tabela.
+
 // Strings Table
 // ----------------------------------------------------------------------------
 
@@ -60,6 +62,7 @@ typedef struct {
   int line;
   int scope;
   int size;
+  int addr;
 } Entry;
 
 struct var_table {
@@ -87,6 +90,20 @@ int add_var(VarTable* vt, char* s, int line, int scope, int size) {
     vt->t[vt->size].line = line;
     vt->t[vt->size].scope = scope;
     vt->t[vt->size].size = size;
+    
+    if(size != -1){
+        vt->t[vt->size].addr = address_counter;
+        if(size == 0){ // é uma variável simples.
+            address_counter++;
+        }
+        else{ // é um vetor.
+            address_counter += size;
+        }
+    }
+    else{ // é uma referência para vetor, portanto não vai para memória.
+        vt->t[vt->size].addr = -1;
+    }
+    
     int idx_added = vt->size;
     vt->size++;
     return idx_added;
@@ -108,11 +125,19 @@ int get_scope(VarTable* vt, int i){
     return vt->t[i].scope;
 }
 
+int get_address(VarTable* vt, int i){
+    return vt->t[i].addr;
+}
+
+void set_address(VarTable* vt, int i, int addr){
+    vt->t[i].addr = addr;
+}
+
 void print_var_table(VarTable* vt) {
     printf("Variables table:\n");
     for (int i = 0; i < vt->size; i++) {
-         printf("Entry %d -- name: %s, line: %d, scope: %d, size: %d\n", i,
-                get_name(vt, i), get_line(vt, i), get_scope(vt, i), get_size(vt, i));
+         printf("Entry %d -- name: %s, line: %d, scope: %d, size: %d, address: %d\n", i,
+                get_name(vt, i), get_line(vt, i), get_scope(vt, i), get_size(vt, i), get_address(vt, i));
     }
 }
 
