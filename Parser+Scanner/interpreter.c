@@ -67,6 +67,14 @@ void init_mem() {
     }
 }
 
+void print_mem(){
+    printf("*** MEM: ");
+    for (int addr = 0; addr < MEM_SIZE; addr++) {
+        printf("%d ", mem[addr]);
+    }
+    printf("\n");
+}
+
 // ----------------------------------------------------------------------------
 
 // #define TRACE
@@ -103,13 +111,6 @@ void plus_int(AST* ast) {
     int r = pop();
     int l = pop();
     push(l + r);
-}
-
-void plus_bool(AST* ast) {
-    run_bin_op();
-    int r = pop();
-    int l = pop();
-    push(l || r); // Can't add l and r here because of overflow (>1).
 }
 
 void run_other_arith(AST* ast, int (*int_op)(int,int)) {
@@ -282,6 +283,8 @@ void run_times(AST* ast) {
 
 void run_var_decl(AST* ast) {
     trace("var_decl");
+    int var_idx = get_data(ast);
+    store(var_idx, pop());
     // Nothing to do, memory was already cleared upon initialization.
 }
 
@@ -367,6 +370,12 @@ void run_func_decl(AST* ast){
 }
 
 void run_func_header(AST* ast){
+    AST* param_list = get_child(ast, 1);
+
+    for(int i = get_child_count(param_list) - 1; i >= 0; i--){
+        AST* var_decl = get_child(param_list, i);
+        rec_run_ast(var_decl);
+    }
 }
 
 void run_func_body(AST* ast){
@@ -380,7 +389,27 @@ void run_func_body(AST* ast){
 void run_output(AST* ast){
     AST* expr = get_child(ast, 0);
     rec_run_ast(expr);
-    printf("%d\n", pop());
+    printf("%d", pop());
+}
+
+void run_fcall(AST* ast){
+    int func_id = get_data(ast);
+    AST* arg_list = get_child(ast, 0);
+    rec_run_ast(arg_list);
+    AST* func_node = get_func_node(ft, func_id);
+    rec_run_ast(func_node);
+}
+
+void run_arg_list(AST* ast){
+    for(int i = 0; i < get_child_count(ast); i++){
+        rec_run_ast(get_child(ast, i));
+    }
+}
+
+void run_return(AST* ast){
+    if(get_child_count(ast) == 1){
+        rec_run_ast(get_child(ast, 0));
+    }
 }
 
 void rec_run_ast(AST* ast) {
@@ -421,6 +450,13 @@ void rec_run_ast(AST* ast) {
         /* Loop: */
         case WHILE_NODE:            run_while(ast);         break;
 
+        /* Function call: */
+        case FUNCTION_CALL_NODE:    run_fcall(ast);         break;
+        case ARG_LIST_NODE:         run_arg_list(ast);      break;
+        case RETURN_NODE:           run_return(ast);        break;
+
+        case VAR_DECL_NODE:         run_var_decl(ast);      break;
+
         /*
         case ASSIGN_NODE:   run_assign(ast);    break;--
         case EQ_NODE:       run_eq(ast);        break;
@@ -430,7 +466,7 @@ void rec_run_ast(AST* ast) {
         
         case STR_VAL_NODE:  run_str_val(ast);   break;
         case TIMES_NODE:    run_times(ast);     break;--
-        case VAR_DECL_NODE: run_var_decl(ast);  break;
+        
         case VAR_LIST_NODE: run_var_list(ast);  break;--
         case VAR_USE_NODE:  run_var_use(ast);   break;--
         case WRITE_NODE:    run_write(ast);     break;--

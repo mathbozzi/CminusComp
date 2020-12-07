@@ -182,6 +182,10 @@ void add_func_node(FuncTable* ft, int i, AST* node){
     ft->t[i].node = node;
 }
 
+AST* get_func_node(FuncTable* ft, int i){
+    return ft->t[i].node;
+}
+
 void print_func_table(FuncTable* ft){
     printf("Functions table:\n");
     for (int i = 0; i < ft->size; i++) {
