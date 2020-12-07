@@ -10,6 +10,7 @@
 #include "tables.h"
 #include "ast.h"
 #include "parser.h"
+#include "interpreter.h"
 
 int yylex();
 int yylex_destroy(void);
@@ -289,6 +290,11 @@ int main() {
     print_func_table(ft); printf("\n\n");
     
     print_dot(root);
+
+    stdin = fopen(ctermid(NULL), "r");
+    run_ast(root);
+
+    fclose(stdin);
 
     free_str_table(st);
     free_var_table(vt);

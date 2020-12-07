@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "tables.h"
+#include "ast.h"
 
 // Strings Table
 // ----------------------------------------------------------------------------
@@ -127,6 +128,7 @@ typedef struct {
   int line;
   int arity; /* o número de parâmetros da função. */
   Type type;
+  AST* node;
 } FuncEntry;
 
 struct func_table {
@@ -145,6 +147,7 @@ int add_func(FuncTable* ft, char* s, int line, int arity, Type type){
     ft->t[ft->size].line = line;
     ft->t[ft->size].arity = arity;
     ft->t[ft->size].type = type;
+    ft->t[ft->size].node = NULL;
     int idx_added = ft->size;
     ft->size++;
     return idx_added;
@@ -173,6 +176,10 @@ int get_func_arity(FuncTable* ft, int i){
 
 int get_func_type(FuncTable* ft, int i){
     return ft->t[i].type;
+}
+
+void add_func_node(FuncTable* ft, int i, AST* node){
+    ft->t[i].node = node;
 }
 
 void print_func_table(FuncTable* ft){

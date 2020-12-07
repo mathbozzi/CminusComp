@@ -9,7 +9,7 @@ flex: scanner.l
 	flex scanner.l
 
 gcc: scanner.c parser.c
-	gcc -Wall -o parser scanner.c parser.c tables.c types.c ast.c
+	gcc -Wall -o parser scanner.c parser.c tables.c types.c ast.c interpreter.c
 
 clean:
 	@rm -f *.o *.output scanner.c parser.h parser.c parser

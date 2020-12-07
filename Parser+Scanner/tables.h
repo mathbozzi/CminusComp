@@ -3,6 +3,7 @@
 #define TABLES_H
 
 #include "types.h"
+#include "ast.h"
 
 // Strings Table
 // ----------------------------------------------------------------------------
@@ -100,6 +101,8 @@ int get_func_line(FuncTable* ft, int i);
 int get_func_arity(FuncTable* ft, int i);
 
 int get_func_type(FuncTable* ft, int i);
+
+void add_func_node(FuncTable* ft, int i, AST* node);
 
 // Prints the given table to stdout.
 void print_func_table(FuncTable* ft);

@@ -7,7 +7,7 @@
 #include "tables.h"
 #include "types.h"
 
-#define CHILDREN_LIMIT 20 // Don't try this at home, kids... :P
+#define CHILDREN_LIMIT 200 // Don't try this at home, kids... :P
 
 struct node {
     NodeKind kind;
