@@ -123,23 +123,11 @@ int int_minus(int l, int r) {
     return l - r;
 }
 
-float float_minus(float l, float r) {
-    return l - r;
-}
-
 int int_over(int l, int r) {
     return l / r;
 }
 
-float float_over(float l, float r) {
-    return l / r;
-}
-
 int int_times(int l, int r) {
-    return l * r;
-}
-
-float float_times(float l, float r) {
     return l * r;
 }
 
@@ -154,24 +142,24 @@ int int_eq(int l, int r) {
     return l == r;
 }
 
-int float_eq(float l, float r) {
-    return l == r;
-}
-
-int str_eq(char *l, char *r) {
-    return (strcmp(l, r) == 0);
+int int_neq(int l, int r){
+    return l != r;
 }
 
 int int_lt(int l, int r) {
     return l < r;
 }
 
-int float_lt(float l, float r) {
-    return l < r;
+int int_le(int l, int r){
+    return l <= r;
 }
 
-int str_lt(char *l, char *r) {
-    return (strcmp(l, r) < 0);
+int int_ge(int l, int r){
+    return l >= r;
+}
+
+int int_gt(int l, int r){
+    return l > r;
 }
 
 // ----------------------------------------------------------------------------
@@ -187,6 +175,11 @@ void run_assign(AST* ast) {
 void run_eq(AST* ast) {
     trace("eq");
     run_cmp(ast, int_eq);
+}
+
+void run_neq(AST* ast){
+    trace("neq");
+    run_cmp(ast, int_neq);
 }
 
 void run_block(AST* ast) {
@@ -221,6 +214,21 @@ void run_int_val(AST* ast) {
 void run_lt(AST* ast) {
     trace("lt");
     run_cmp(ast, int_lt);
+}
+
+void run_le(AST* ast){
+    trace("le");
+    run_cmp(ast, int_le);
+}
+
+void run_ge(AST* ast){
+    trace("ge");
+    run_cmp(ast, int_ge);
+}
+
+void run_gt(AST* ast){
+    trace("gt");
+    run_cmp(ast, int_gt);
 }
 
 void run_minus(AST* ast) {
@@ -395,19 +403,26 @@ void rec_run_ast(AST* ast) {
         case MINUS_NODE:            run_minus(ast);         break;
         case TIMES_NODE:            run_times(ast);         break;
         case OVER_NODE:             run_over(ast);          break;
+
+        /* Conditionals: */
+        case IF_NODE:               run_if(ast);            break;
+
+        case EQ_NODE:               run_eq(ast);            break;
+        case NEQ_NODE:              run_neq(ast);           break;
+        
+        case LE_NODE:               run_le(ast);            break;
+        case LT_NODE:               run_lt(ast);            break;
+
+        case GE_NODE:               run_ge(ast);            break;
+        case GT_NODE:               run_gt(ast);            break;
+        
+
         /*
         case ASSIGN_NODE:   run_assign(ast);    break;--
         case EQ_NODE:       run_eq(ast);        break;
         case BLOCK_NODE:    run_block(ast);     break;--
         case BOOL_VAL_NODE: run_bool_val(ast);  break;
-        case IF_NODE:       run_if(ast);        break;
-        case INT_VAL_NODE:  run_int_val(ast);   break;--
-        case LT_NODE:       run_lt(ast);        break;
-        case MINUS_NODE:    run_minus(ast);     break;--
-        case OVER_NODE:     run_over(ast);      break;--
-        case PLUS_NODE:     run_plus(ast);      break;--
         case PROGRAM_NODE:  run_program(ast);   break;
-        case READ_NODE:     run_read(ast);      break;
         case REPEAT_NODE:   run_repeat(ast);    break;
         case STR_VAL_NODE:  run_str_val(ast);   break;
         case TIMES_NODE:    run_times(ast);     break;--
