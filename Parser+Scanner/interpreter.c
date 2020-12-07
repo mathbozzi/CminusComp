@@ -259,13 +259,14 @@ void run_input(AST* ast) {
     push(n);
 }
 
-void run_repeat(AST* ast) {
-    trace("repeat");
-    int again = 1;
-    while (again) {
-        rec_run_ast(get_child(ast, 0)); // Run body.
-        rec_run_ast(get_child(ast, 1)); // Run test.
-        again = !pop();
+void run_while(AST* ast) {
+    trace("while");
+    rec_run_ast(get_child(ast, 0)); // Run test.
+    int loop = pop();
+    while (loop) {
+        rec_run_ast(get_child(ast, 1)); // Run block.
+        rec_run_ast(get_child(ast, 0)); // Run test.
+        loop = pop();
     }
 }
 
@@ -417,13 +418,16 @@ void rec_run_ast(AST* ast) {
         case GT_NODE:               run_gt(ast);            break;
         
 
+        /* Loop: */
+        case WHILE_NODE:            run_while(ast);         break;
+
         /*
         case ASSIGN_NODE:   run_assign(ast);    break;--
         case EQ_NODE:       run_eq(ast);        break;
         case BLOCK_NODE:    run_block(ast);     break;--
         case BOOL_VAL_NODE: run_bool_val(ast);  break;
         case PROGRAM_NODE:  run_program(ast);   break;
-        case REPEAT_NODE:   run_repeat(ast);    break;
+        
         case STR_VAL_NODE:  run_str_val(ast);   break;
         case TIMES_NODE:    run_times(ast);     break;--
         case VAR_DECL_NODE: run_var_decl(ast);  break;
