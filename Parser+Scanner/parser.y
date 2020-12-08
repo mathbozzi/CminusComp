@@ -6,12 +6,14 @@
 %{
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "types.h"
 #include "tables.h"
 #include "ast.h"
 #include "parser.h"
 #include "interpreter.h"
 
+void mystrdup(char** destination, char* source);
 int yylex();
 int yylex_destroy(void);
 void yyerror(const char *s);
@@ -36,9 +38,9 @@ int arity = 0; /* contador de aridade para adição de funções na ft. É reset
 int arguments = 0; /* contador de argumentos passados para uma função. É usado para checar se bate com a aridade. Também resetado após cada chamada de função. */
 
 char* id = NULL;
-char* prev_id; /* O acesso de uma posição de vetor através de variável requer dois ids, por isso esse ponteiro auxiliar guarda o id anterior. */
+char* prev_id = NULL; /* O acesso de uma posição de vetor através de variável requer dois ids, por isso esse ponteiro auxiliar guarda o id anterior. */
 int num;
-char* func_id;
+char* func_id = NULL;
 
 AST* root = NULL;
 
@@ -77,7 +79,7 @@ func_decl:
 ;
 
 func_header:
-  ret_type ID { func_id = id; } LPAREN params RPAREN { $$ = new_subtree(FUNCTION_HEADER_NODE, 2, new_func(func_id), $5); }
+  ret_type ID { mystrdup(&func_id, id); } LPAREN params RPAREN { $$ = new_subtree(FUNCTION_HEADER_NODE, 2, new_func(func_id), $5); }
 ;
 
 func_body:
@@ -121,7 +123,7 @@ var_decl_list:
 
 var_decl:
   INT ID { $2 = new_var(id, 0); } SEMI { $$ = $2; }
-| INT ID LBRACK NUM RBRACK { $2 = new_var(id, num); } SEMI { $$ = $2; }
+| INT ID LBRACK NUM RBRACK { $2 = new_var(id, num); add_child($2, $4); } SEMI { $$ = $2; }
 ;
 
 stmt_list:
@@ -184,7 +186,7 @@ write_call:
 ;
 
 user_func_call:
-  ID {func_id = id; } LPAREN opt_arg_list RPAREN { $1 = check_func(func_id); add_child($1, $4); $$ = $1; arguments = 0; }
+  ID { mystrdup(&func_id, id); } LPAREN opt_arg_list RPAREN { $1 = check_func(func_id); add_child($1, $4); $$ = $1; arguments = 0; }
 ;
 
 opt_arg_list:
@@ -300,7 +302,17 @@ int main() {
     free_var_table(vt);
     free_func_table(ft);
     free_tree(root);
-    yylex_destroy();    // To avoid memory leaks within flex...
+    yylex_destroy();    // To avoid memory leaks within flex...]
+    
+    if(id != NULL){
+      free(id);
+    }
+    if(prev_id != NULL){
+      free(prev_id);
+    }
+    if(func_id != NULL){
+      free(func_id);
+    }
 
     return 0;
 }

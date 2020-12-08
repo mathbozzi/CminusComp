@@ -19,6 +19,9 @@ extern StrTable *st;
 extern char* id;
 extern char* prev_id;
 extern int num;
+
+void mystrdup(char** destination, char* source);
+
 %}
 
 number      [0-9]+
@@ -74,7 +77,12 @@ SLC         "//"[^\n]*\n
 "}"             { process_token(RBRACE); }
 
 {number}        { num = atoi(yytext); yylval = new_node(INT_VAL_NODE, num); process_token(NUM); }
-{identifier}    { if(id != NULL) prev_id = strdup(id); id = strdup(yytext); process_token(ID); }
+{identifier}    {   if(id != NULL){
+                        mystrdup(&prev_id, id);
+                    }
+                    mystrdup(&id, yytext);
+                    process_token(ID);
+                }
 {string}        { yylval = new_node(STR_VAL_NODE, add_string(st, yytext)); process_token(STRING); }
 
                 /* Be sure to keep this as the last rule */
@@ -82,3 +90,10 @@ SLC         "//"[^\n]*\n
                   exit(1); }
 
 %%
+
+void mystrdup(char** destination, char* source){
+    if(*destination != NULL){
+        free(*destination);
+    }
+    *destination = strdup(source);
+}

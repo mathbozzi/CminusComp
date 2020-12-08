@@ -169,6 +169,7 @@ int get_offset(AST* ast){
     }
     else{
         printf("Nó de acesso não é nem inteiro nem variável. Algo está errado.\n");
+        exit(EXIT_FAILURE);
     }
 
     return offset;
@@ -271,8 +272,13 @@ void run_input(AST* ast) {
     trace("input");
     int n;
     printf("input: ");
-    scanf("%d", &n);
-    push(n);
+    if(scanf("%d", &n) == 1){
+        push(n);
+    }
+    else{
+        printf("Falha ao ler entrada.\n");
+        push(0);
+    }
 }
 
 void run_while(AST* ast) {
@@ -298,7 +304,7 @@ void run_times(AST* ast) {
 
 void run_var_decl(AST* ast) {
     trace("var_decl");
-    // Esse trecho de código inicializa os parâmetros de uma função.
+    // Esse trecho de código só roda quando um nó é filho de param_list.
     // Obtém o id do parâmetro na tabela vt, depois obtém seu endereço de memória. Depois, pega o que está na pilha e joga para esse endereço.
     // Checa se o size é -1. Se é, é um vetor e não deve haver passagem por cópia, mas sim modificação do endereço.
     int var_idx = get_data(ast);
@@ -315,7 +321,7 @@ void run_var_decl(AST* ast) {
 
 void run_var_list(AST* ast) {
     trace("var_list");
-    // Nothing to do, memory was already cleared upon initialization.
+    // Nada precisa ser feito aqui.
 }
 
 void run_var_use(AST* ast) {
