@@ -1,0 +1,31 @@
+int mod(int n, int div){
+    int res;
+    res = n / div;
+    return n - (res * div);
+}
+
+int prime(int n){
+    int i;
+    int retval;
+    retval = 1;
+    i = 2;
+    while(i < n){
+        if(mod(n, i) == 0){
+            retval = 0;
+        }
+        i = i + 1;
+    }
+    return retval;
+}
+
+void main(void){
+    int n;
+    n = 2;
+    while(n < 100){
+        if(prime(n) == 1){
+            output(n);
+            write(" é primo.\n");
+        }
+        n = n + 1;
+    }
+}
