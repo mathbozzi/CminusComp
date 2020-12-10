@@ -93,7 +93,6 @@ char* kind2str(NodeKind kind) {
         case ASSIGN_NODE:   return "=";
         case EQ_NODE:       return "==";
         case BLOCK_NODE:    return "block";
-        case BOOL_VAL_NODE: return "";
         case IF_NODE:       return "if";
         case INPUT_NODE:    return "input";
         case INT_VAL_NODE:  return "num";
@@ -104,10 +103,6 @@ char* kind2str(NodeKind kind) {
         case OUTPUT_NODE:   return "output";
         case OVER_NODE:     return "/";
         case PLUS_NODE:     return "+";
-        case PROGRAM_NODE:  return "program";
-        case READ_NODE:     return "read";
-        case REAL_VAL_NODE: return "";
-        case REPEAT_NODE:   return "repeat";
         case STR_VAL_NODE:  return "string";
         case TIMES_NODE:    return "*";
         case VAR_DECL_NODE: return "var_decl";
